@@ -1,5 +1,5 @@
 defmodule Bazar do
-  @request_delay 1000
+  @request_delay 600
 
   def get_trade_history_page(page_num) do
     resp =
@@ -12,12 +12,10 @@ defmodule Bazar do
   end
 
   def history_page_to_auction_urls(html) do
-    # TODO: simplify Floki query to ".AuctionCharacterName href"
     html
     |> Floki.parse_document!()
-    |> Floki.find(".AuctionCharacterName")
-    |> Enum.map(fn tree -> Floki.find(tree, "a") end)
-    |> Enum.map(fn [{"a", [{"href", link}], _}] -> link end)
+    |> Floki.find(".AuctionCharacterName a")
+    |> Enum.map(fn {"a", [{"href", link}], _} -> link end)
   end
 
   def parse_auction_page(auction_link) do
@@ -79,8 +77,7 @@ defmodule Bazar do
   defp get_server(html_tree) do
     # TODO: simplify Floki find to ".AuctionHeader href"
     html_tree
-    |> Floki.find(".AuctionHeader")
-    |> Floki.find("a")
+    |> Floki.find(".AuctionHeader a")
     |> Floki.attribute("href")
     |> Enum.at(0)
     |> String.split("&world=")
@@ -158,16 +155,14 @@ defmodule Bazar do
     %{charms: charms}
   end
 
-  def run() do
-    "https://www.tibia.com/charactertrade/?subtopic=pastcharactertrades&page=details&auctionid=1420234"
-    |> parse_auction_page()
-  end
+  def parse_auction_history_page(page_num) do
+    auction_urls =
+      page_num
+      |> get_trade_history_page()
+      |> history_page_to_auction_urls()
 
-  def test() do
-    Req.get!(
-      "https://www.tibia.com/charactertrade/?subtopic=pastcharactertrades&page=details&auctionid=1420234"
-    ).body
-    |> Floki.parse_document!()
-    |> get_charms()
+    for auction_url <- auction_urls do
+      parse_auction_page(auction_url) |> IO.inspect()
+    end
   end
 end
