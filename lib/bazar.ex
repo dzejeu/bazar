@@ -1,5 +1,5 @@
 defmodule Bazar do
-  @request_delay 600
+  @request_delay 350
 
   def get_trade_history_page(page_num) do
     resp =
@@ -19,7 +19,8 @@ defmodule Bazar do
   end
 
   def parse_auction_page(auction_link) do
-    html = Req.get!(auction_link).body |> Floki.parse_document!()
+    exp_backoff = fn n -> Integer.pow(2, n) end
+    html = Req.get!(auction_link, retry_delay: exp_backoff).body |> Floki.parse_document!()
     :timer.sleep(@request_delay)
 
     parse_fns = [
@@ -28,8 +29,6 @@ defmodule Bazar do
       &get_server/1,
       &get_auction_price/1,
       &get_skills/1,
-      &get_gold/1,
-      &get_available_charms/1,
       &get_charms/1
     ]
 
@@ -112,14 +111,6 @@ defmodule Bazar do
     |> Enum.map(fn {_, _, [skill]} -> String.to_integer(skill) end)
     |> Enum.zip(skills)
     |> Map.new(fn {v, k} -> {k, v} end)
-  end
-
-  defp get_gold(html_tree) do
-    %{gold: 0}
-  end
-
-  defp get_available_charms(html_tree) do
-    %{available_charms: 0}
   end
 
   defp get_charms(html_tree) do

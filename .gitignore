@@ -25,5 +25,6 @@ bazar-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
-/data.csv
+/*.csv
 /.elixir_ls
+/*.txt
