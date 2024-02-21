@@ -28,7 +28,7 @@ defmodule Main do
       "charms"
     ]
 
-    File.write!("historical_data.csv", Enum.join(header, ",") <> "\n", [:write])
+    File.write!("data/historical_data.csv", Enum.join(header, ",") <> "\n", [:write])
 
     for {link, n} <- Enum.with_index(links, 1) do
       IO.puts("Fetching page #{n}/#{total}")
@@ -37,7 +37,7 @@ defmodule Main do
         Bazar.parse_auction_page(link)
         |> Map.update!(:charms, fn charms -> Enum.join(charms, ";") end)
 
-      File.write!("historical_data.csv", (data |> Map.values() |> Enum.join(",")) <> "\n", [
+      File.write!("data/historical_data.csv", (data |> Map.values() |> Enum.join(",")) <> "\n", [
         :append
       ])
     end
